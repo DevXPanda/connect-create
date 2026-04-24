@@ -1,0 +1,188 @@
+import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { ArrowLeft, MapPin, Star, Instagram, Youtube, Twitter, Heart, Share2, MessageCircle, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { formatFollowers, influencers } from "@/data/influencers";
+import { toast } from "sonner";
+
+export const Route = createFileRoute("/influencer/$id")({
+  loader: ({ params }) => {
+    const inf = influencers.find((i) => i.id === params.id);
+    if (!inf) throw notFound();
+    return { inf };
+  },
+  head: ({ loaderData }) => ({
+    meta: loaderData
+      ? [
+          { title: `${loaderData.inf.name} — Lumen` },
+          { name: "description", content: loaderData.inf.bio },
+          { property: "og:image", content: loaderData.inf.cover },
+        ]
+      : [],
+  }),
+  errorComponent: ({ error, reset }) => (
+    <div className="mx-auto max-w-md p-12 text-center">
+      <p className="text-sm text-muted-foreground">{error.message}</p>
+      <Button onClick={reset} className="mt-4">Try again</Button>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="mx-auto max-w-md p-12 text-center">
+      <h1 className="font-display text-2xl font-bold">Creator not found</h1>
+      <Link to="/browse"><Button className="mt-4 rounded-full">Back to browse</Button></Link>
+    </div>
+  ),
+  component: Profile,
+});
+
+const tiers = [
+  { name: "Story", price: 1, perks: ["1 story slide", "24h live", "Link in story", "Quick turnaround"] },
+  { name: "Post", price: 2.5, perks: ["1 in-feed post", "2 revisions", "Caption draft", "Performance recap"], popular: true },
+  { name: "Reel", price: 4, perks: ["30–60s reel", "Concept call", "3 revisions", "Cross-post to TikTok"] },
+];
+
+function Profile() {
+  const { inf } = Route.useLoaderData();
+  const portfolio = [inf.cover, ...influencers.slice(0, 5).map((i) => i.cover)];
+
+  return (
+    <div>
+      {/* COVER */}
+      <div className="relative h-64 overflow-hidden sm:h-80">
+        <img src={inf.cover} alt="" className="h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        <div className="absolute left-4 top-4 sm:left-6 sm:top-6">
+          <Link to="/browse">
+            <Button variant="secondary" size="sm" className="rounded-full backdrop-blur">
+              <ArrowLeft className="mr-1 h-4 w-4" /> Back
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {/* HEADER */}
+        <div className="-mt-20 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+          <div className="flex items-end gap-5">
+            <img
+              src={inf.avatar}
+              alt={inf.name}
+              className="h-32 w-32 rounded-3xl border-4 border-background object-cover shadow-elevated"
+            />
+            <div className="pb-2">
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-3xl font-bold">{inf.name}</h1>
+                <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-sunset"><Check className="h-3 w-3 text-white" /></span>
+              </div>
+              <p className="text-sm text-muted-foreground">{inf.handle}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <Badge variant="secondary" className="rounded-full">{inf.category}</Badge>
+                <span className="flex items-center gap-1 text-muted-foreground">
+                  <MapPin className="h-3 w-3" /> {inf.location}
+                </span>
+                <span className="flex items-center gap-1 text-amber">
+                  <Star className="h-3 w-3 fill-current" /> {inf.rating} ({inf.reviews})
+                </span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="icon" className="rounded-full" onClick={() => toast.success("Saved to favorites")}>
+              <Heart className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="rounded-full" onClick={() => toast("Link copied")}>
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <Button className="rounded-full gradient-sunset border-0 text-white shadow-glow" onClick={() => toast.success("Message sent!")}>
+              <MessageCircle className="mr-2 h-4 w-4" /> Hire {inf.name.split(" ")[0]}
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
+          {/* LEFT */}
+          <div className="space-y-10">
+            <div className="grid grid-cols-3 gap-4">
+              {[
+                { label: "Followers", value: formatFollowers(inf.followers) },
+                { label: "Engagement", value: "5.8%" },
+                { label: "Avg. reach", value: formatFollowers(Math.round(inf.followers * 0.42)) },
+              ].map((s) => (
+                <div key={s.label} className="rounded-2xl border border-border bg-card p-4 text-center">
+                  <div className="font-display text-xl font-bold">{s.value}</div>
+                  <div className="text-xs text-muted-foreground">{s.label}</div>
+                </div>
+              ))}
+            </div>
+
+            <section>
+              <h2 className="font-display text-xl font-semibold">About</h2>
+              <p className="mt-3 text-muted-foreground">{inf.bio} I work with brands that align with my audience values and craft authentic, high-performing content with measurable results.</p>
+              <div className="mt-4 flex gap-2">
+                {[Instagram, Youtube, Twitter].map((Icon, i) => (
+                  <a key={i} href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-border hover:bg-secondary">
+                    <Icon className="h-4 w-4" />
+                  </a>
+                ))}
+              </div>
+            </section>
+
+            <section>
+              <h2 className="font-display text-xl font-semibold">Portfolio</h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {portfolio.map((src, i) => (
+                  <div key={i} className="group relative aspect-square overflow-hidden rounded-2xl">
+                    <img src={src} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          {/* PRICING */}
+          <aside className="space-y-4">
+            <div className="rounded-3xl border border-border bg-card p-6">
+              <h3 className="font-display text-lg font-semibold">Pricing</h3>
+              <p className="text-xs text-muted-foreground">Starting from ${inf.startingPrice}</p>
+
+              <div className="mt-5 space-y-3">
+                {tiers.map((t) => {
+                  const price = Math.round(inf.startingPrice * t.price);
+                  return (
+                    <div
+                      key={t.name}
+                      className={`relative rounded-2xl border p-4 transition-colors ${
+                        t.popular ? "border-primary/50 bg-accent/40" : "border-border"
+                      }`}
+                    >
+                      {t.popular && (
+                        <Badge className="absolute -top-2 right-4 rounded-full border-0 gradient-sunset text-white">Popular</Badge>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-display font-semibold">{t.name}</h4>
+                        <span className="font-display text-lg font-bold">${price}</span>
+                      </div>
+                      <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
+                        {t.perks.map((p) => (
+                          <li key={p} className="flex items-center gap-2">
+                            <Check className="h-3 w-3 text-primary" /> {p}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Button className="mt-5 w-full rounded-full gradient-sunset border-0 text-white shadow-glow">
+                Request a quote
+              </Button>
+            </div>
+          </aside>
+        </div>
+
+        <div className="h-20" />
+      </div>
+    </div>
+  );
+}
