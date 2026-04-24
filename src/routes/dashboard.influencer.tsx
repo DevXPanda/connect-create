@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { influencers } from "@/data/influencers";
+import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/influencer")({
@@ -94,7 +95,7 @@ function CreatorDash() {
               <div key={t.name} className="rounded-2xl border border-border p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-display font-semibold">{t.name}</span>
-                  <span className="font-display font-bold">${Math.round(t.price)}</span>
+                  <span className="font-display font-bold">{formatINR(t.price)}</span>
                 </div>
                 <Input type="number" defaultValue={Math.round(t.price)} className="mt-3" />
               </div>
