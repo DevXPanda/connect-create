@@ -9,38 +9,141 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InfluencerIdRouteImport } from './routes/influencer.$id'
+import { Route as DashboardInfluencerRouteImport } from './routes/dashboard.influencer'
+import { Route as DashboardCustomerRouteImport } from './routes/dashboard.customer'
 
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BrowseRoute = BrowseRouteImport.update({
+  id: '/browse',
+  path: '/browse',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InfluencerIdRoute = InfluencerIdRouteImport.update({
+  id: '/influencer/$id',
+  path: '/influencer/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardInfluencerRoute = DashboardInfluencerRouteImport.update({
+  id: '/dashboard/influencer',
+  path: '/dashboard/influencer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardCustomerRoute = DashboardCustomerRouteImport.update({
+  id: '/dashboard/customer',
+  path: '/dashboard/customer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/dashboard/customer': typeof DashboardCustomerRoute
+  '/dashboard/influencer': typeof DashboardInfluencerRoute
+  '/influencer/$id': typeof InfluencerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/dashboard/customer': typeof DashboardCustomerRoute
+  '/dashboard/influencer': typeof DashboardInfluencerRoute
+  '/influencer/$id': typeof InfluencerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/browse': typeof BrowseRoute
+  '/login': typeof LoginRoute
+  '/register': typeof RegisterRoute
+  '/dashboard/customer': typeof DashboardCustomerRoute
+  '/dashboard/influencer': typeof DashboardInfluencerRoute
+  '/influencer/$id': typeof InfluencerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/browse'
+    | '/login'
+    | '/register'
+    | '/dashboard/customer'
+    | '/dashboard/influencer'
+    | '/influencer/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/browse'
+    | '/login'
+    | '/register'
+    | '/dashboard/customer'
+    | '/dashboard/influencer'
+    | '/influencer/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/browse'
+    | '/login'
+    | '/register'
+    | '/dashboard/customer'
+    | '/dashboard/influencer'
+    | '/influencer/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  BrowseRoute: typeof BrowseRoute
+  LoginRoute: typeof LoginRoute
+  RegisterRoute: typeof RegisterRoute
+  DashboardCustomerRoute: typeof DashboardCustomerRoute
+  DashboardInfluencerRoute: typeof DashboardInfluencerRoute
+  InfluencerIdRoute: typeof InfluencerIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/browse': {
+      id: '/browse'
+      path: '/browse'
+      fullPath: '/browse'
+      preLoaderRoute: typeof BrowseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +151,38 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/influencer/$id': {
+      id: '/influencer/$id'
+      path: '/influencer/$id'
+      fullPath: '/influencer/$id'
+      preLoaderRoute: typeof InfluencerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/influencer': {
+      id: '/dashboard/influencer'
+      path: '/dashboard/influencer'
+      fullPath: '/dashboard/influencer'
+      preLoaderRoute: typeof DashboardInfluencerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/customer': {
+      id: '/dashboard/customer'
+      path: '/dashboard/customer'
+      fullPath: '/dashboard/customer'
+      preLoaderRoute: typeof DashboardCustomerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  BrowseRoute: BrowseRoute,
+  LoginRoute: LoginRoute,
+  RegisterRoute: RegisterRoute,
+  DashboardCustomerRoute: DashboardCustomerRoute,
+  DashboardInfluencerRoute: DashboardInfluencerRoute,
+  InfluencerIdRoute: InfluencerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
