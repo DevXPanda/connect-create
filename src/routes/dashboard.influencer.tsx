@@ -54,7 +54,7 @@ function CreatorDash() {
         <div className="rounded-3xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Edit profile</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div><Label>Display name</Label><Input defaultValue={me.name} className="mt-1.5" /></div>
+            <div><Label>Display name</Label><Input defaultValue={profile?.full_name || me.name} key={profile?.full_name || me.name} className="mt-1.5" /></div>
             <div><Label>Handle</Label><Input defaultValue={me.handle} className="mt-1.5" /></div>
             <div><Label>Category</Label><Input defaultValue={me.category} className="mt-1.5" /></div>
             <div><Label>Location</Label><Input defaultValue={me.location} className="mt-1.5" /></div>
