@@ -3,6 +3,7 @@ import { ArrowLeft, MapPin, Star, Instagram, Youtube, Twitter, Heart, Share2, Me
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatFollowers, influencers } from "@/data/influencers";
+import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/influencer/$id")({
@@ -143,7 +144,7 @@ function Profile() {
           <aside className="space-y-4">
             <div className="rounded-3xl border border-border bg-card p-6">
               <h3 className="font-display text-lg font-semibold">Pricing</h3>
-              <p className="text-xs text-muted-foreground">Starting from ${inf.startingPrice}</p>
+              <p className="text-xs text-muted-foreground">Starting from {formatINR(inf.startingPrice)}</p>
 
               <div className="mt-5 space-y-3">
                 {tiers.map((t) => {
@@ -160,7 +161,7 @@ function Profile() {
                       )}
                       <div className="flex items-center justify-between">
                         <h4 className="font-display font-semibold">{t.name}</h4>
-                        <span className="font-display text-lg font-bold">${price}</span>
+                        <span className="font-display text-lg font-bold">{formatINR(price)}</span>
                       </div>
                       <ul className="mt-3 space-y-1.5 text-xs text-muted-foreground">
                         {t.perks.map((p) => (
