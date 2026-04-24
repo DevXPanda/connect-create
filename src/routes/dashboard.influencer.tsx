@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { influencers } from "@/data/influencers";
 import { formatINR } from "@/lib/format";
+import { useAuth } from "@/components/auth-provider";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/influencer")({
@@ -15,14 +16,17 @@ export const Route = createFileRoute("/dashboard/influencer")({
 });
 
 function CreatorDash() {
+  const { profile, user } = useAuth();
   const me = influencers[0];
   const portfolio = influencers.slice(0, 4).map((i) => i.cover);
+  const displayName =
+    profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || me.name.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">Creator dashboard</p>
-        <h1 className="font-display text-3xl font-bold sm:text-4xl">Hello, {me.name.split(" ")[0]} 👋</h1>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">Hello, {displayName} 👋</h1>
       </div>
 
       {/* analytics */}
