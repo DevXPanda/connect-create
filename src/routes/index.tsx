@@ -3,6 +3,7 @@ import { ArrowRight, Search, Sparkles, Star, TrendingUp, Users, Zap, CheckCircle
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { categories, formatFollowers, influencers } from "@/data/influencers";
+import { formatINR } from "@/lib/format";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -75,7 +76,7 @@ function Landing() {
                   <p className="font-display text-sm font-semibold">{inf.name}</p>
                   <p className="text-xs text-muted-foreground">{inf.category} · {formatFollowers(inf.followers)}</p>
                   <div className="mt-3 flex items-center justify-between text-xs">
-                    <span className="font-semibold">${inf.startingPrice}</span>
+                    <span className="font-semibold">{formatINR(inf.startingPrice)}</span>
                     <span className="flex items-center gap-1 text-amber"><Star className="h-3 w-3 fill-current" />{inf.rating}</span>
                   </div>
                 </div>
@@ -180,7 +181,7 @@ function Landing() {
                 </div>
                 <div className="mt-2 flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">From</span>
-                  <span className="font-display text-lg font-bold text-gradient-sunset">${inf.startingPrice}</span>
+                  <span className="font-display text-lg font-bold text-gradient-sunset">{formatINR(inf.startingPrice)}</span>
                 </div>
               </div>
             </Link>
