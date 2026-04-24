@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { categories, formatFollowers, influencers } from "@/data/influencers";
+import { formatINR } from "@/lib/format";
 
 export const Route = createFileRoute("/browse")({
   head: () => ({
@@ -21,7 +22,7 @@ export const Route = createFileRoute("/browse")({
 function Browse() {
   const [query, setQuery] = useState("");
   const [activeCats, setActiveCats] = useState<string[]>([]);
-  const [price, setPrice] = useState<number[]>([1500]);
+  const [price, setPrice] = useState<number[]>([150000]);
   const [followers, setFollowers] = useState<number[]>([3000000]);
   const [location, setLocation] = useState("");
   const [availableOnly, setAvailableOnly] = useState(false);
@@ -60,9 +61,9 @@ function Browse() {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h3 className="font-display text-sm font-semibold">Price</h3>
-          <span className="text-xs text-muted-foreground">Up to ${price[0]}</span>
+          <span className="text-xs text-muted-foreground">Up to {formatINR(price[0])}</span>
         </div>
-        <Slider value={price} onValueChange={setPrice} min={100} max={2000} step={50} />
+        <Slider value={price} onValueChange={setPrice} min={10000} max={150000} step={5000} />
       </div>
 
       <div>
@@ -170,7 +171,7 @@ function Browse() {
                     </div>
                     <div className="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">
                       <span className="text-muted-foreground">{formatFollowers(inf.followers)} followers</span>
-                      <span className="font-display font-bold text-gradient-sunset">${inf.startingPrice}</span>
+                      <span className="font-display font-bold text-gradient-sunset">{formatINR(inf.startingPrice)}</span>
                     </div>
                   </div>
                 </Link>

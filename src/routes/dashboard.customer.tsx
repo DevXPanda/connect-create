@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatFollowers, influencers } from "@/data/influencers";
 import { toast } from "sonner";
+import { useAuth } from "@/components/auth-provider";
 
 export const Route = createFileRoute("/dashboard/customer")({
   head: () => ({ meta: [{ title: "Brand dashboard — Lumen" }] }),
@@ -11,14 +12,24 @@ export const Route = createFileRoute("/dashboard/customer")({
 });
 
 function CustomerDash() {
+  const { profile, user } = useAuth();
   const saved = influencers.slice(0, 4);
-  const recent = ["fashion creators in Paris", "fitness reels under $500", "tech reviewers 1M+", "food bloggers Brooklyn"];
+  const recent = [
+    "fashion creators in Mumbai",
+    "fitness reels under ₹40,000",
+    "tech reviewers 1M+",
+    "food bloggers Delhi",
+  ];
+
+  const firstName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">Brand dashboard</p>
-        <h1 className="font-display text-3xl font-bold sm:text-4xl">Welcome back 👋</h1>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">
+          Welcome back{firstName ? `, ${firstName}` : ""} 👋
+        </h1>
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
@@ -86,9 +97,9 @@ function CustomerDash() {
           <div className="space-y-4 text-sm">
             {[
               { k: "Niches", v: "Fashion · Beauty · Lifestyle" },
-              { k: "Budget", v: "$200 – $1,200 / post" },
+              { k: "Budget", v: "₹20,000 – ₹1,00,000 / post" },
               { k: "Reach", v: "100K – 1M followers" },
-              { k: "Regions", v: "Europe · North America" },
+              { k: "Regions", v: "India · South Asia" },
             ].map((row) => (
               <div key={row.k} className="flex items-center justify-between border-b border-border pb-3 last:border-0">
                 <span className="text-muted-foreground">{row.k}</span>

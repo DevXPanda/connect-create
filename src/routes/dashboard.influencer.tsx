@@ -6,6 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { influencers } from "@/data/influencers";
+import { formatINR } from "@/lib/format";
+import { useAuth } from "@/components/auth-provider";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/influencer")({
@@ -14,14 +16,17 @@ export const Route = createFileRoute("/dashboard/influencer")({
 });
 
 function CreatorDash() {
+  const { profile, user } = useAuth();
   const me = influencers[0];
   const portfolio = influencers.slice(0, 4).map((i) => i.cover);
+  const displayName =
+    profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || me.name.split(" ")[0];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="flex flex-col gap-2">
         <p className="text-sm text-muted-foreground">Creator dashboard</p>
-        <h1 className="font-display text-3xl font-bold sm:text-4xl">Hello, {me.name.split(" ")[0]} 👋</h1>
+        <h1 className="font-display text-3xl font-bold sm:text-4xl">Hello, {displayName} 👋</h1>
       </div>
 
       {/* analytics */}
@@ -49,7 +54,7 @@ function CreatorDash() {
         <div className="rounded-3xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Edit profile</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div><Label>Display name</Label><Input defaultValue={me.name} className="mt-1.5" /></div>
+            <div><Label>Display name</Label><Input defaultValue={profile?.full_name || me.name} key={profile?.full_name || me.name} className="mt-1.5" /></div>
             <div><Label>Handle</Label><Input defaultValue={me.handle} className="mt-1.5" /></div>
             <div><Label>Category</Label><Input defaultValue={me.category} className="mt-1.5" /></div>
             <div><Label>Location</Label><Input defaultValue={me.location} className="mt-1.5" /></div>
@@ -94,7 +99,7 @@ function CreatorDash() {
               <div key={t.name} className="rounded-2xl border border-border p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-display font-semibold">{t.name}</span>
-                  <span className="font-display font-bold">${Math.round(t.price)}</span>
+                  <span className="font-display font-bold">{formatINR(t.price)}</span>
                 </div>
                 <Input type="number" defaultValue={Math.round(t.price)} className="mt-3" />
               </div>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
   head: () => ({ meta: [{ title: "Create account — Lumen" }] }),
@@ -20,13 +21,29 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const valid = name.length > 1 && /^\S+@\S+\.\S+$/.test(email) && password.length >= 6;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
     if (!valid) return;
+    setSubmitting(true);
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { full_name: name, role },
+      },
+    });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Account created — welcome to Lumen!");
     navigate({ to: role === "creator" ? "/dashboard/influencer" : "/dashboard/customer" });
   };
@@ -77,7 +94,7 @@ function Register() {
             <Label htmlFor="name">Full name</Label>
             <div className="relative mt-1.5">
               <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="name" placeholder="Jane Doe" className="pl-10" value={name} onChange={(e) => setName(e.target.value)} />
+              <Input id="name" placeholder="Aarav Sharma" className="pl-10" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
           </div>
           <div>
@@ -95,7 +112,9 @@ function Register() {
             </div>
           </div>
           {touched && !valid && <p className="text-xs text-destructive">Please fill all fields correctly.</p>}
-          <Button type="submit" className="w-full rounded-full gradient-sunset border-0 text-white shadow-glow">Create account</Button>
+          <Button type="submit" disabled={submitting} className="w-full rounded-full gradient-sunset border-0 text-white shadow-glow">
+            {submitting ? "Creating…" : "Create account"}
+          </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">

@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/components/auth-provider";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Lumen" }] }),
@@ -13,19 +15,46 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // If already signed in, redirect
+  useEffect(() => {
+    if (user && profile) {
+      navigate({ to: profile.role === "creator" ? "/dashboard/influencer" : "/dashboard/customer" });
+    }
+  }, [user, profile, navigate]);
 
   const emailValid = /^\S+@\S+\.\S+$/.test(email);
   const passValid = password.length >= 6;
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setTouched(true);
     if (!emailValid || !passValid) return;
+    setSubmitting(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setSubmitting(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Welcome back!");
-    navigate({ to: "/dashboard/customer" });
+    // Fetch role to route correctly
+    const uid = data.user?.id;
+    if (uid) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", uid)
+        .maybeSingle();
+      navigate({ to: prof?.role === "creator" ? "/dashboard/influencer" : "/dashboard/customer" });
+    } else {
+      navigate({ to: "/dashboard/customer" });
+    }
   };
 
   return (
@@ -49,7 +78,7 @@ function Login() {
             <Label htmlFor="email">Email</Label>
             <div className="relative mt-1.5">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input id="email" type="email" placeholder="you@brand.com" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="email" type="email" placeholder="you@brand.in" className="pl-10" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             {touched && !emailValid && <p className="mt-1 text-xs text-destructive">Enter a valid email.</p>}
           </div>
@@ -64,7 +93,9 @@ function Login() {
             </div>
             {touched && !passValid && <p className="mt-1 text-xs text-destructive">At least 6 characters.</p>}
           </div>
-          <Button type="submit" className="w-full rounded-full gradient-sunset border-0 text-white shadow-glow">Sign in</Button>
+          <Button type="submit" disabled={submitting} className="w-full rounded-full gradient-sunset border-0 text-white shadow-glow">
+            {submitting ? "Signing in…" : "Sign in"}
+          </Button>
         </form>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
