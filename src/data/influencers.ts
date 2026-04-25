@@ -14,20 +14,9 @@ export type Influencer = {
   bio: string;
 };
 
-const avatars = [
-  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&q=80",
-  "https://images.unsplash.com/photo-1633332755192-727a05c4013d?w=400&q=80",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80",
-  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&q=80",
-  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&q=80",
-  "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=400&q=80",
-  "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&q=80",
-  "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&q=80",
-  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&q=80",
-  "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?w=400&q=80",
-  "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=400&q=80",
-  "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80",
-];
+// Avatar generator — produces clean, consistent illustrated portraits per name
+const avatarFor = (seed: string) =>
+  `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=ffd5dc,ffdfbf,c0aede,d1d4f9,b6e3f4&radius=20`;
 
 const covers = [
   "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80",
