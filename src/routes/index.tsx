@@ -157,11 +157,13 @@ function Landing() {
                   {inf.category}
                 </Badge>
               </div>
-              <div className="-mt-10 px-5 pb-5">
+              <div className="-mt-12 px-5 pb-5">
                 <img
                   src={inf.avatar}
                   alt={inf.name}
-                  className="h-20 w-20 rounded-2xl border-4 border-card object-cover shadow-soft"
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  className="h-20 w-20 rounded-full border-4 border-card object-cover object-center shadow-soft bg-muted"
                 />
                 <div className="mt-3 flex items-start justify-between">
                   <div>
