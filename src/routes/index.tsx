@@ -66,6 +66,19 @@ function Landing() {
               </Link>
             </div>
 
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Link to="/browse">
+                <Button size="lg" className="rounded-full gradient-sunset border-0 text-white shadow-glow transition-transform hover:scale-105 hover:opacity-95">
+                  Find creators <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </Link>
+              <Link to="/register">
+                <Button size="lg" variant="outline" className="rounded-full border-border bg-card/80 backdrop-blur transition-colors hover:bg-secondary hover:text-foreground">
+                  Become an influencer
+                </Button>
+              </Link>
+            </div>
+
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
               {["Fashion", "Tech", "Beauty", "Gaming"].map((c) => (
                 <span key={c} className="rounded-full border border-border bg-card/80 px-3 py-1 backdrop-blur">{c}</span>
