@@ -45,7 +45,7 @@ const data: Omit<Influencer, "avatar" | "cover">[] = [
 
 export const influencers: Influencer[] = data.map((d, i) => ({
   ...d,
-  avatar: avatars[i % avatars.length],
+  avatar: avatarFor(d.name),
   cover: covers[i % covers.length],
 }));
 
