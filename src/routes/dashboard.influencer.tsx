@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Eye, MousePointerClick, TrendingUp, Upload, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Eye, MousePointerClick, TrendingUp, Upload, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { influencers } from "@/data/influencers";
 import { formatINR } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/influencer")({
@@ -15,12 +16,146 @@ export const Route = createFileRoute("/dashboard/influencer")({
   component: CreatorDash,
 });
 
+type Tier = { id?: string; name: string; price: number; sort_order: number };
+type Portfolio = { id: string; image_path: string; url: string };
+
+function publicUrl(path: string) {
+  return supabase.storage.from("portfolio").getPublicUrl(path).data.publicUrl;
+}
+
 function CreatorDash() {
-  const { profile, user } = useAuth();
-  const me = influencers[0];
-  const portfolio = influencers.slice(0, 4).map((i) => i.cover);
-  const displayName =
-    profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || me.name.split(" ")[0];
+  const { profile, user, refreshProfile } = useAuth();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const [fullName, setFullName] = useState("");
+  const [handle, setHandle] = useState("");
+  const [category, setCategory] = useState("");
+  const [location, setLocation] = useState("");
+  const [bio, setBio] = useState("");
+  const [startingPrice, setStartingPrice] = useState<number>(0);
+  const [tiers, setTiers] = useState<Tier[]>([]);
+  const [portfolio, setPortfolio] = useState<Portfolio[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, handle, category, location, bio, starting_price")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (prof) {
+        setFullName(prof.full_name || "");
+        setHandle(prof.handle || "");
+        setCategory(prof.category || "");
+        setLocation(prof.location || "");
+        setBio(prof.bio || "");
+        setStartingPrice(Number(prof.starting_price ?? 0));
+      }
+
+      const { data: t } = await supabase
+        .from("pricing_tiers")
+        .select("id, name, price, sort_order")
+        .eq("user_id", user.id)
+        .order("sort_order");
+      if (t && t.length) {
+        setTiers(t.map((x) => ({ id: x.id, name: x.name, price: Number(x.price), sort_order: x.sort_order })));
+      } else {
+        setTiers([
+          { name: "Story", price: 0, sort_order: 0 },
+          { name: "Post", price: 0, sort_order: 1 },
+          { name: "Reel", price: 0, sort_order: 2 },
+        ]);
+      }
+
+      const { data: imgs } = await supabase
+        .from("portfolio_images")
+        .select("id, image_path")
+        .eq("user_id", user.id)
+        .order("sort_order");
+      setPortfolio((imgs || []).map((i) => ({ id: i.id, image_path: i.image_path, url: publicUrl(i.image_path) })));
+    })();
+  }, [user]);
+
+  const saveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: fullName,
+        handle: handle || null,
+        category: category || null,
+        location: location || null,
+        bio: bio || null,
+        starting_price: startingPrice || null,
+      })
+      .eq("id", user.id);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Profile saved");
+    refreshProfile();
+  };
+
+  const savePricing = async () => {
+    if (!user) return;
+    // Upsert all rows; delete is handled separately
+    const rows = tiers.map((t, idx) => ({
+      ...(t.id ? { id: t.id } : {}),
+      user_id: user.id,
+      name: t.name,
+      price: t.price,
+      sort_order: idx,
+    }));
+    const { error } = await supabase.from("pricing_tiers").upsert(rows).select();
+    if (error) return toast.error(error.message);
+    toast.success("Pricing updated");
+    // refresh ids
+    const { data } = await supabase
+      .from("pricing_tiers")
+      .select("id, name, price, sort_order")
+      .eq("user_id", user.id)
+      .order("sort_order");
+    if (data) setTiers(data.map((x) => ({ id: x.id, name: x.name, price: Number(x.price), sort_order: x.sort_order })));
+  };
+
+  const removeTier = async (idx: number) => {
+    const t = tiers[idx];
+    if (t.id) await supabase.from("pricing_tiers").delete().eq("id", t.id);
+    setTiers(tiers.filter((_, i) => i !== idx));
+  };
+
+  const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!user || !e.target.files?.length) return;
+    const file = e.target.files[0];
+    setUploading(true);
+    const path = `${user.id}/${Date.now()}-${file.name}`;
+    const { error: upErr } = await supabase.storage.from("portfolio").upload(path, file);
+    if (upErr) {
+      setUploading(false);
+      return toast.error(upErr.message);
+    }
+    const { data, error } = await supabase
+      .from("portfolio_images")
+      .insert({ user_id: user.id, image_path: path, sort_order: portfolio.length })
+      .select()
+      .single();
+    setUploading(false);
+    if (error || !data) return toast.error(error?.message || "Upload failed");
+    setPortfolio([...portfolio, { id: data.id, image_path: path, url: publicUrl(path) }]);
+    toast.success("Image uploaded");
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const removeImage = async (img: Portfolio) => {
+    await supabase.storage.from("portfolio").remove([img.image_path]);
+    await supabase.from("portfolio_images").delete().eq("id", img.id);
+    setPortfolio(portfolio.filter((p) => p.id !== img.id));
+  };
+
+  const displayName = fullName?.split(" ")[0] || profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -29,7 +164,6 @@ function CreatorDash() {
         <h1 className="font-display text-3xl font-bold sm:text-4xl">Hello, {displayName} 👋</h1>
       </div>
 
-      {/* analytics */}
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {[
           { icon: Eye, label: "Profile views", value: "12,482", delta: "+18%" },
@@ -50,62 +184,84 @@ function CreatorDash() {
       </div>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
-        {/* edit profile */}
         <div className="rounded-3xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Edit profile</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
-            <div><Label>Display name</Label><Input defaultValue={profile?.full_name || me.name} key={profile?.full_name || me.name} className="mt-1.5" /></div>
-            <div><Label>Handle</Label><Input defaultValue={me.handle} className="mt-1.5" /></div>
-            <div><Label>Category</Label><Input defaultValue={me.category} className="mt-1.5" /></div>
-            <div><Label>Location</Label><Input defaultValue={me.location} className="mt-1.5" /></div>
-            <div className="sm:col-span-2"><Label>Bio</Label><Textarea defaultValue={me.bio} className="mt-1.5" rows={3} /></div>
+            <div><Label>Display name</Label><Input value={fullName} onChange={(e) => setFullName(e.target.value)} className="mt-1.5" /></div>
+            <div><Label>Handle</Label><Input value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@yourname" className="mt-1.5" /></div>
+            <div><Label>Category</Label><Input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Fashion, Tech…" className="mt-1.5" /></div>
+            <div><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Mumbai, India" className="mt-1.5" /></div>
+            <div><Label>Starting price (₹)</Label><Input type="number" value={startingPrice} onChange={(e) => setStartingPrice(Number(e.target.value))} className="mt-1.5" /></div>
+            <div className="sm:col-span-2"><Label>Bio</Label><Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="mt-1.5" rows={3} /></div>
           </div>
 
           <h3 className="mt-8 font-display text-base font-semibold">Portfolio</h3>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {portfolio.map((src, i) => (
-              <div key={i} className="aspect-square overflow-hidden rounded-2xl border border-border">
-                <img src={src} alt="" className="h-full w-full object-cover" />
+            {portfolio.map((img) => (
+              <div key={img.id} className="group relative aspect-square overflow-hidden rounded-2xl border border-border">
+                <img src={img.url} alt="" className="h-full w-full object-cover" />
+                <button
+                  onClick={() => removeImage(img)}
+                  className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 opacity-0 shadow-soft transition-opacity group-hover:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </button>
               </div>
             ))}
-            <button
-              onClick={() => toast("Upload coming soon")}
-              className="flex aspect-square flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border text-xs text-muted-foreground hover:bg-secondary"
-            >
+            <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border text-xs text-muted-foreground hover:bg-secondary">
               <Upload className="h-5 w-5" />
-              Upload
-            </button>
+              {uploading ? "Uploading…" : "Upload"}
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onUpload} disabled={uploading} />
+            </label>
           </div>
 
           <div className="mt-6 flex justify-end">
-            <Button onClick={() => toast.success("Profile saved")} className="rounded-full gradient-sunset border-0 text-white shadow-glow">
-              Save changes
+            <Button onClick={saveProfile} disabled={saving} className="rounded-full gradient-sunset border-0 text-white shadow-glow">
+              {saving ? "Saving…" : "Save changes"}
             </Button>
           </div>
         </div>
 
-        {/* pricing */}
         <div className="rounded-3xl border border-border bg-card p-6">
           <div className="flex items-center justify-between">
             <h2 className="font-display text-lg font-semibold">Pricing</h2>
-            <Button size="sm" variant="outline" className="rounded-full"><Plus className="mr-1 h-3 w-3" /> Add</Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setTiers([...tiers, { name: "New tier", price: 0, sort_order: tiers.length }])}
+            >
+              <Plus className="mr-1 h-3 w-3" /> Add
+            </Button>
           </div>
           <div className="mt-5 space-y-3">
-            {[
-              { name: "Story", price: me.startingPrice },
-              { name: "Post", price: me.startingPrice * 2.5 },
-              { name: "Reel", price: me.startingPrice * 4 },
-            ].map((t) => (
-              <div key={t.name} className="rounded-2xl border border-border p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-display font-semibold">{t.name}</span>
+            {tiers.map((t, idx) => (
+              <div key={idx} className="rounded-2xl border border-border p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <Input
+                    value={t.name}
+                    onChange={(e) => {
+                      const next = [...tiers]; next[idx] = { ...t, name: e.target.value }; setTiers(next);
+                    }}
+                    className="h-8 max-w-[60%] font-display font-semibold"
+                  />
                   <span className="font-display font-bold">{formatINR(t.price)}</span>
+                  <button onClick={() => removeTier(idx)} className="text-muted-foreground hover:text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
-                <Input type="number" defaultValue={Math.round(t.price)} className="mt-3" />
+                <Input
+                  type="number"
+                  value={t.price}
+                  onChange={(e) => {
+                    const next = [...tiers]; next[idx] = { ...t, price: Number(e.target.value) }; setTiers(next);
+                  }}
+                  className="mt-3"
+                />
               </div>
             ))}
           </div>
-          <Button onClick={() => toast.success("Pricing updated")} variant="secondary" className="mt-5 w-full rounded-full">Update pricing</Button>
+          <Button onClick={savePricing} variant="secondary" className="mt-5 w-full rounded-full">Update pricing</Button>
         </div>
       </div>
     </div>
