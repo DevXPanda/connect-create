@@ -64,24 +64,38 @@ function Landing() {
             </div>
           </div>
 
-          {/* hero floating cards */}
-          <div className="relative mx-auto mt-16 hidden max-w-4xl md:block">
-            <div className="grid grid-cols-3 gap-6">
-              {featured.slice(0, 3).map((inf, i) => (
-                <div
-                  key={inf.id}
-                  className="glass animate-float rounded-3xl p-4 shadow-elevated"
-                  style={{ animationDelay: `${i * 1.2}s`, transform: i === 1 ? "translateY(-24px)" : "" }}
-                >
-                  <img src={inf.avatar} alt={inf.name} className="mb-3 h-14 w-14 rounded-2xl object-cover" />
-                  <p className="font-display text-sm font-semibold">{inf.name}</p>
-                  <p className="text-xs text-muted-foreground">{inf.category} · {formatFollowers(inf.followers)}</p>
-                  <div className="mt-3 flex items-center justify-between text-xs">
-                    <span className="font-semibold">{formatINR(inf.startingPrice)}</span>
-                    <span className="flex items-center gap-1 text-amber"><Star className="h-3 w-3 fill-current" />{inf.rating}</span>
+          {/* hero banner */}
+          <div className="relative mx-auto mt-16 max-w-6xl">
+            <div className="relative overflow-hidden rounded-3xl border border-border shadow-elevated">
+              <img
+                src={heroBanner}
+                alt="Featured creators across fashion, fitness, tech, beauty, travel and food"
+                width={1920}
+                height={1080}
+                className="h-auto w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
+            </div>
+
+            {/* hero floating cards */}
+            <div className="relative -mt-12 hidden md:block">
+              <div className="grid grid-cols-3 gap-6">
+                {featured.slice(0, 3).map((inf, i) => (
+                  <div
+                    key={inf.id}
+                    className="glass animate-float rounded-3xl p-4 shadow-elevated"
+                    style={{ animationDelay: `${i * 1.2}s`, transform: i === 1 ? "translateY(-24px)" : "" }}
+                  >
+                    <img src={inf.avatar} alt={inf.name} className="mb-3 h-14 w-14 rounded-2xl object-cover" />
+                    <p className="font-display text-sm font-semibold">{inf.name}</p>
+                    <p className="text-xs text-muted-foreground">{inf.category} · {formatFollowers(inf.followers)}</p>
+                    <div className="mt-3 flex items-center justify-between text-xs">
+                      <span className="font-semibold">{formatINR(inf.startingPrice)}</span>
+                      <span className="flex items-center gap-1 text-amber"><Star className="h-3 w-3 fill-current" />{inf.rating}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
