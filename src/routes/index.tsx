@@ -28,9 +28,10 @@ function Landing() {
           <img
             src={heroBanner}
             alt="Featured creators across fashion, fitness, tech, beauty, travel and food"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover scale-110 blur-sm"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/70 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/75 to-background" />
+          <div className="absolute inset-0 bg-background/40" />
         </div>
         <div className="pointer-events-none absolute inset-0 -z-10">
           <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full gradient-warm opacity-20 blur-3xl animate-blob" />
