@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { categories, formatFollowers, influencers } from "@/data/influencers";
 import { formatINR } from "@/lib/format";
+import heroBanner from "@/assets/hero-banner.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
