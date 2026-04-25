@@ -22,16 +22,24 @@ function Landing() {
   return (
     <div className="overflow-hidden">
       {/* HERO */}
-      <section className="relative">
+      <section className="relative overflow-hidden">
+        {/* background banner image */}
+        <div className="absolute inset-0 -z-10">
+          <img
+            src={heroBanner}
+            alt="Featured creators across fashion, fitness, tech, beauty, travel and food"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/70 to-background" />
+        </div>
         <div className="pointer-events-none absolute inset-0 -z-10">
-          <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full gradient-warm opacity-30 blur-3xl animate-blob" />
-          <div className="absolute top-20 right-0 h-[28rem] w-[28rem] rounded-full gradient-pink opacity-30 blur-3xl animate-blob" style={{ animationDelay: "4s" }} />
-          <div className="absolute top-60 left-1/3 h-72 w-72 rounded-full bg-violet/30 opacity-30 blur-3xl animate-blob" style={{ animationDelay: "8s" }} />
+          <div className="absolute -top-40 -left-32 h-96 w-96 rounded-full gradient-warm opacity-20 blur-3xl animate-blob" />
+          <div className="absolute top-20 right-0 h-[28rem] w-[28rem] rounded-full gradient-pink opacity-20 blur-3xl animate-blob" style={{ animationDelay: "4s" }} />
         </div>
 
-        <div className="mx-auto max-w-7xl px-4 pb-20 pt-16 sm:px-6 sm:pt-24 lg:px-8">
+        <div className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 sm:pt-28 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <Badge variant="secondary" className="rounded-full border border-border bg-card/60 px-4 py-1.5 backdrop-blur">
+            <Badge variant="secondary" className="rounded-full border border-border bg-card/80 px-4 py-1.5 backdrop-blur">
               <Sparkles className="mr-1.5 h-3.5 w-3.5 text-primary" />
               Over 50,000 vetted creators
             </Badge>
@@ -44,7 +52,7 @@ function Landing() {
               Discover vetted influencers across every niche. Launch campaigns in days, not weeks. Get measurable results.
             </p>
 
-            <div className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full border border-border bg-card p-2 shadow-soft">
+            <div className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full border border-border bg-card/90 p-2 shadow-soft backdrop-blur">
               <Search className="ml-3 h-5 w-5 text-muted-foreground" />
               <input
                 placeholder="Try 'fashion creator in Paris'"
@@ -59,43 +67,29 @@ function Landing() {
 
             <div className="mt-5 flex flex-wrap items-center justify-center gap-2 text-xs text-muted-foreground">
               {["Fashion", "Tech", "Beauty", "Gaming"].map((c) => (
-                <span key={c} className="rounded-full border border-border bg-card/60 px-3 py-1 backdrop-blur">{c}</span>
+                <span key={c} className="rounded-full border border-border bg-card/80 px-3 py-1 backdrop-blur">{c}</span>
               ))}
             </div>
           </div>
 
-          {/* hero banner */}
-          <div className="relative mx-auto mt-16 max-w-6xl">
-            <div className="relative overflow-hidden rounded-3xl border border-border shadow-elevated">
-              <img
-                src={heroBanner}
-                alt="Featured creators across fashion, fitness, tech, beauty, travel and food"
-                width={1920}
-                height={1080}
-                className="h-auto w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-transparent" />
-            </div>
-
-            {/* hero floating cards */}
-            <div className="relative -mt-12 hidden md:block">
-              <div className="grid grid-cols-3 gap-6">
-                {featured.slice(0, 3).map((inf, i) => (
-                  <div
-                    key={inf.id}
-                    className="glass animate-float rounded-3xl p-4 shadow-elevated"
-                    style={{ animationDelay: `${i * 1.2}s`, transform: i === 1 ? "translateY(-24px)" : "" }}
-                  >
-                    <img src={inf.avatar} alt={inf.name} className="mb-3 h-14 w-14 rounded-2xl object-cover" />
-                    <p className="font-display text-sm font-semibold">{inf.name}</p>
-                    <p className="text-xs text-muted-foreground">{inf.category} · {formatFollowers(inf.followers)}</p>
-                    <div className="mt-3 flex items-center justify-between text-xs">
-                      <span className="font-semibold">{formatINR(inf.startingPrice)}</span>
-                      <span className="flex items-center gap-1 text-amber"><Star className="h-3 w-3 fill-current" />{inf.rating}</span>
-                    </div>
+          {/* hero floating cards */}
+          <div className="relative mx-auto mt-16 hidden max-w-5xl md:block">
+            <div className="grid grid-cols-3 gap-6">
+              {featured.slice(0, 3).map((inf, i) => (
+                <div
+                  key={inf.id}
+                  className="glass animate-float rounded-3xl p-4 shadow-elevated"
+                  style={{ animationDelay: `${i * 1.2}s`, transform: i === 1 ? "translateY(-24px)" : "" }}
+                >
+                  <img src={inf.avatar} alt={inf.name} className="mb-3 h-14 w-14 rounded-2xl object-cover" />
+                  <p className="font-display text-sm font-semibold">{inf.name}</p>
+                  <p className="text-xs text-muted-foreground">{inf.category} · {formatFollowers(inf.followers)}</p>
+                  <div className="mt-3 flex items-center justify-between text-xs">
+                    <span className="font-semibold">{formatINR(inf.startingPrice)}</span>
+                    <span className="flex items-center gap-1 text-amber"><Star className="h-3 w-3 fill-current" />{inf.rating}</span>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
