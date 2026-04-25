@@ -14,26 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
-      profiles: {
+      portfolio_images: {
         Row: {
           created_at: string
-          full_name: string
           id: string
-          role: Database["public"]["Enums"]["user_role"]
-          updated_at: string
+          image_path: string
+          sort_order: number
+          user_id: string
         }
         Insert: {
           created_at?: string
-          full_name?: string
-          id: string
-          role?: Database["public"]["Enums"]["user_role"]
-          updated_at?: string
+          id?: string
+          image_path: string
+          sort_order?: number
+          user_id: string
         }
         Update: {
           created_at?: string
-          full_name?: string
           id?: string
+          image_path?: string
+          sort_order?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_images_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pricing_tiers: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_tiers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          category: string | null
+          created_at: string
+          full_name: string
+          handle: string | null
+          id: string
+          location: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          starting_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          category?: string | null
+          created_at?: string
+          full_name?: string
+          handle?: string | null
+          id: string
+          location?: string | null
           role?: Database["public"]["Enums"]["user_role"]
+          starting_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          category?: string | null
+          created_at?: string
+          full_name?: string
+          handle?: string | null
+          id?: string
+          location?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          starting_price?: number | null
           updated_at?: string
         }
         Relationships: []
