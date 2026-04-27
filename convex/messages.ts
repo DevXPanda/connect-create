@@ -11,7 +11,7 @@ export const startConversation = mutation({
     // Check if conversation already exists
     const existing = await ctx.db
       .query("conversations")
-      .filter((q) => 
+      .filter((q) =>
         q.and(
           q.eq(q.field("brandId"), args.brandId),
           q.eq(q.field("creatorId"), args.creatorId)
@@ -52,7 +52,7 @@ export const sendMessage = mutation({
       senderId: args.senderId,
       text: args.text,
     });
-    
+
     // Update status to active if it was pending
     const conv = await ctx.db.get(args.conversationId);
     if (conv?.status === "pending") {
@@ -65,7 +65,7 @@ export const getConversations = query({
   args: { profileId: v.id("profiles"), role: v.string() },
   handler: async (ctx, args) => {
     let q = ctx.db.query("conversations");
-    
+
     if (args.role === "creator") {
       q = q.withIndex("by_creator", (q) => q.eq("creatorId", args.profileId));
     } else {
@@ -86,7 +86,7 @@ export const getConversations = query({
           .collect();
 
         const lastMessage = messages[0];
-        
+
         // Count unread: messages where sender is NOT the current user
         const unreadCount = messages.filter(m => m.senderId !== args.profileId).length;
 
