@@ -80,6 +80,9 @@ export const create = mutation({
       userId: args.userId,
       fullName: args.fullName,
       role: args.role,
+      profileViews: 0,
+      clicks: 0,
+      bookings: 0,
     });
   },
 });
@@ -94,6 +97,17 @@ export const update = mutation({
     bio: v.optional(v.string()),
     startingPrice: v.optional(v.number()),
     avatarUrl: v.optional(v.string()),
+    // Stats
+    profileViews: v.optional(v.number()),
+    clicks: v.optional(v.number()),
+    bookings: v.optional(v.number()),
+    // Socials
+    instagramHandle: v.optional(v.string()),
+    instagramFollowers: v.optional(v.number()),
+    facebookHandle: v.optional(v.string()),
+    facebookFollowers: v.optional(v.number()),
+    linkedinHandle: v.optional(v.string()),
+    linkedinFollowers: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const { id, ...fields } = args;

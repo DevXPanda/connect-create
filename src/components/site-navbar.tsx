@@ -157,9 +157,13 @@ export function SiteNavbar() {
                 to={profile?.role === "creator" ? "/dashboard/influencer" : "/dashboard/customer"}
                 className="flex h-9 items-center gap-2 rounded-full border border-border bg-card pl-1 pr-3 transition-colors hover:bg-secondary"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full gradient-sunset text-xs font-bold text-white">
-                  {initial}
-                </span>
+                {profile?.avatarUrl ? (
+                  <img src={profile.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover border border-border/50" />
+                ) : (
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full gradient-sunset text-[10px] font-bold text-white">
+                    {initial}
+                  </span>
+                )}
                 <span className="max-w-[120px] truncate text-sm font-medium">
                   {profile?.fullName || user.email}
                 </span>

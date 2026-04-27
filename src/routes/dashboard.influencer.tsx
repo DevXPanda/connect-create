@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Eye, MousePointerClick, TrendingUp, Upload, Plus, Trash2 } from "lucide-react";
+import { Eye, MousePointerClick, TrendingUp, Upload, Plus, Trash2, Instagram, Facebook, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +48,14 @@ function CreatorDash() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  // Social states
+  const [instaHandle, setInstaHandle] = useState("");
+  const [instaFollowers, setInstaFollowers] = useState<number>(0);
+  const [fbHandle, setFbHandle] = useState("");
+  const [fbFollowers, setFbFollowers] = useState<number>(0);
+  const [liHandle, setLiHandle] = useState("");
+  const [liFollowers, setLiFollowers] = useState<number>(0);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate({ to: "/login" });
@@ -62,6 +70,13 @@ function CreatorDash() {
       setLocation(profile.location || "");
       setBio(profile.bio || "");
       setStartingPrice(Number(profile.startingPrice ?? 0));
+      // Socials
+      setInstaHandle(profile.instagramHandle || "");
+      setInstaFollowers(profile.instagramFollowers || 0);
+      setFbHandle(profile.facebookHandle || "");
+      setFbFollowers(profile.facebookFollowers || 0);
+      setLiHandle(profile.linkedinHandle || "");
+      setLiFollowers(profile.linkedinFollowers || 0);
     }
   }, [profile]);
 
@@ -89,6 +104,13 @@ function CreatorDash() {
         location: location || undefined,
         bio: bio || undefined,
         startingPrice,
+        // Socials
+        instagramHandle: instaHandle || undefined,
+        instagramFollowers: instaFollowers,
+        facebookHandle: fbHandle || undefined,
+        facebookFollowers: fbFollowers,
+        linkedinHandle: liHandle || undefined,
+        linkedinFollowers: liFollowers,
       });
       toast.success("Profile saved");
     } catch (e: any) {
@@ -177,9 +199,9 @@ function CreatorDash() {
 
       <div className="mt-8 grid gap-4 sm:grid-cols-3">
         {[
-          { icon: Eye, label: "Profile views", value: "12,482", delta: "+18%" },
-          { icon: MousePointerClick, label: "Clicks", value: "3,210", delta: "+9%" },
-          { icon: TrendingUp, label: "Bookings", value: "24", delta: "+4" },
+          { icon: Eye, label: "Profile views", value: profile?.profileViews?.toLocaleString() || "0", delta: "+18%" },
+          { icon: MousePointerClick, label: "Clicks", value: profile?.clicks?.toLocaleString() || "0", delta: "+9%" },
+          { icon: TrendingUp, label: "Bookings", value: profile?.bookings?.toLocaleString() || "0", delta: "+4" },
         ].map((s) => (
           <div key={s.label} className="rounded-3xl border border-border bg-card p-6">
             <div className="flex items-start justify-between">
@@ -204,6 +226,55 @@ function CreatorDash() {
             <div><Label>Location</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Mumbai, India" className="mt-1.5" /></div>
             <div><Label>Starting price (₹)</Label><Input type="number" value={startingPrice} onChange={(e) => setStartingPrice(Number(e.target.value))} className="mt-1.5" /></div>
             <div className="sm:col-span-2"><Label>Bio</Label><Textarea value={bio} onChange={(e) => setBio(e.target.value)} className="mt-1.5" rows={3} /></div>
+          </div>
+
+          <h3 className="mt-8 font-display text-base font-semibold">Social presence</h3>
+          <p className="mb-4 text-xs text-muted-foreground">Update your social handles and follower counts manually.</p>
+          <div className="grid gap-6 sm:grid-cols-3">
+            <div className="space-y-3 rounded-2xl border border-border p-4 bg-muted/20">
+              <div className="flex items-center gap-2">
+                <Instagram className="h-4 w-4 text-pink-600" />
+                <span className="text-sm font-semibold">Instagram</span>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                <Input size={1} value={instaHandle} onChange={(e) => setInstaHandle(e.target.value)} placeholder="@username" className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                <Input type="number" value={instaFollowers} onChange={(e) => setInstaFollowers(Number(e.target.value))} className="h-8 text-xs" />
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-border p-4 bg-muted/20">
+              <div className="flex items-center gap-2">
+                <Facebook className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-semibold">Facebook</span>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                <Input size={1} value={fbHandle} onChange={(e) => setFbHandle(e.target.value)} placeholder="username" className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                <Input type="number" value={fbFollowers} onChange={(e) => setFbFollowers(Number(e.target.value))} className="h-8 text-xs" />
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-2xl border border-border p-4 bg-muted/20">
+              <div className="flex items-center gap-2">
+                <Linkedin className="h-4 w-4 text-blue-800" />
+                <span className="text-sm font-semibold">LinkedIn</span>
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Handle</Label>
+                <Input size={1} value={liHandle} onChange={(e) => setLiHandle(e.target.value)} placeholder="in/username" className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Followers</Label>
+                <Input type="number" value={liFollowers} onChange={(e) => setLiFollowers(Number(e.target.value))} className="h-8 text-xs" />
+              </div>
+            </div>
           </div>
 
           <h3 className="mt-8 font-display text-base font-semibold">Portfolio</h3>

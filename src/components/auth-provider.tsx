@@ -16,6 +16,17 @@ export type Profile = {
   bio?: string;
   startingPrice?: number;
   avatarUrl?: string;
+  // Stats
+  profileViews?: number;
+  clicks?: number;
+  bookings?: number;
+  // Socials
+  instagramHandle?: string;
+  instagramFollowers?: number;
+  facebookHandle?: string;
+  facebookFollowers?: number;
+  linkedinHandle?: string;
+  linkedinFollowers?: number;
 };
 
 type AuthCtx = {

@@ -12,6 +12,17 @@ export type Influencer = {
   avatar: string;
   cover: string;
   bio: string;
+  // Stats
+  profileViews?: number;
+  clicks?: number;
+  bookings?: number;
+  // Socials
+  instagramHandle?: string;
+  instagramFollowers?: number;
+  facebookHandle?: string;
+  facebookFollowers?: number;
+  linkedinHandle?: string;
+  linkedinFollowers?: number;
 };
 
 const avatars = [

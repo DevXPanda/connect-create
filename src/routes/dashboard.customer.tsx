@@ -59,7 +59,7 @@ function CustomerDash() {
               <div className="grid gap-3 sm:grid-cols-2">
                 {saved.map((inf) => (
                   <div key={inf.id} className="flex items-center gap-3 rounded-2xl border border-border p-3">
-                    <img src={inf.avatar} alt="" className="h-12 w-12 rounded-xl object-cover" />
+                    <img src={inf.avatar} alt="" className="h-12 w-12 rounded-full object-cover aspect-square flex-shrink-0 border border-border/50 shadow-sm" />
                     <div className="min-w-0 flex-1">
                       <Link to="/influencer/$id" params={{ id: inf.id }} className="block truncate font-display text-sm font-semibold hover:text-primary">
                         {inf.name}

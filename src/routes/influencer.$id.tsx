@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, MapPin, Star, Instagram, Youtube, Twitter, Heart, Share2, MessageCircle, Check } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Instagram, Youtube, Twitter, Heart, Share2, MessageCircle, Check, Facebook, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatFollowers, influencers, type Influencer } from "@/data/influencers";
@@ -25,7 +25,7 @@ export const Route = createFileRoute("/influencer/$id")({
             name: profile.fullName,
             handle: profile.handle || `@${profile.fullName.toLowerCase().replace(/\s/g, "")}`,
             category: profile.category || "General",
-            followers: 0,
+            followers: (profile.instagramFollowers || 0) + (profile.facebookFollowers || 0) + (profile.linkedinFollowers || 0),
             startingPrice: profile.startingPrice || 0,
             location: profile.location || "India",
             rating: 5.0,
@@ -34,6 +34,13 @@ export const Route = createFileRoute("/influencer/$id")({
             avatar: profile.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.fullName}`,
             cover: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80",
             bio: profile.bio || "Creator on Lumen",
+            // Socials
+            instagramHandle: profile.instagramHandle,
+            instagramFollowers: profile.instagramFollowers,
+            facebookHandle: profile.facebookHandle,
+            facebookFollowers: profile.facebookFollowers,
+            linkedinHandle: profile.linkedinHandle,
+            linkedinFollowers: profile.linkedinFollowers,
           } as Influencer;
         }
       } catch (e) {
@@ -123,19 +130,19 @@ function Profile() {
 
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* HEADER */}
-        <div className="-mt-20 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div className="-mt-20 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between relative z-20">
           <div className="flex items-end gap-5">
             <img
               src={inf.avatar}
               alt={inf.name}
-              className="h-32 w-32 rounded-3xl border-4 border-background object-cover shadow-elevated"
+              className="h-32 w-32 rounded-full border-4 border-background object-cover shadow-elevated bg-background"
             />
             <div className="pb-2">
               <div className="flex items-center gap-2">
-                <h1 className="font-display text-3xl font-bold">{inf.name}</h1>
-                <span className="flex h-5 w-5 items-center justify-center rounded-full gradient-sunset"><Check className="h-3 w-3 text-white" /></span>
+                <h1 className="font-display text-4xl font-bold tracking-tight text-foreground">{inf.name}</h1>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full gradient-sunset shadow-sm"><Check className="h-3.5 w-3.5 text-white" /></span>
               </div>
-              <p className="text-sm text-muted-foreground">{inf.handle}</p>
+              <p className="text-lg font-medium text-muted-foreground/90">{inf.handle}</p>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                 <Badge variant="secondary" className="rounded-full">{inf.category}</Badge>
                 <span className="flex items-center gap-1 text-muted-foreground">
@@ -163,29 +170,58 @@ function Profile() {
         <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
           {/* LEFT */}
           <div className="space-y-10">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
               {[
-                { label: "Followers", value: formatFollowers(inf.followers) },
+                { label: "Total Followers", value: formatFollowers(inf.followers) },
                 { label: "Engagement", value: "5.8%" },
                 { label: "Avg. reach", value: formatFollowers(Math.round(inf.followers * 0.42)) },
               ].map((s) => (
-                <div key={s.label} className="rounded-2xl border border-border bg-card p-4 text-center">
+                <div key={s.label} className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-4 text-center shadow-sm">
                   <div className="font-display text-xl font-bold">{s.value}</div>
                   <div className="text-xs text-muted-foreground">{s.label}</div>
                 </div>
               ))}
+              {inf.instagramHandle && (
+                <a 
+                  href={`https://instagram.com/${inf.instagramHandle.replace("@", "")}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-4 text-center shadow-sm hover:border-pink-200 hover:bg-pink-50/30 transition-all group"
+                >
+                  <Instagram className="h-5 w-5 text-pink-600 mb-1 group-hover:scale-110 transition-transform" />
+                  <div className="font-display text-lg font-bold">{formatFollowers(inf.instagramFollowers || 0)}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Instagram</div>
+                </a>
+              )}
+              {inf.facebookHandle && (
+                <a 
+                  href={`https://facebook.com/${inf.facebookHandle}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-4 text-center shadow-sm hover:border-blue-200 hover:bg-blue-50/30 transition-all group"
+                >
+                  <Facebook className="h-5 w-5 text-blue-600 mb-1 group-hover:scale-110 transition-transform" />
+                  <div className="font-display text-lg font-bold">{formatFollowers(inf.facebookFollowers || 0)}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Facebook</div>
+                </a>
+              )}
+              {inf.linkedinHandle && (
+                <a 
+                  href={`https://linkedin.com/in/${inf.linkedinHandle.replace("in/", "")}`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card p-4 text-center shadow-sm hover:border-blue-300 hover:bg-blue-50/30 transition-all group"
+                >
+                  <Linkedin className="h-5 w-5 text-blue-800 mb-1 group-hover:scale-110 transition-transform" />
+                  <div className="font-display text-lg font-bold">{formatFollowers(inf.linkedinFollowers || 0)}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">LinkedIn</div>
+                </a>
+              )}
             </div>
 
             <section>
               <h2 className="font-display text-xl font-semibold">About</h2>
-              <p className="mt-3 text-muted-foreground">{inf.bio} I work with brands that align with my audience values and craft authentic, high-performing content with measurable results.</p>
-              <div className="mt-4 flex gap-2">
-                {[Instagram, Youtube, Twitter].map((Icon, i) => (
-                  <a key={i} href="#" className="flex h-10 w-10 items-center justify-center rounded-full border border-border hover:bg-secondary">
-                    <Icon className="h-4 w-4" />
-                  </a>
-                ))}
-              </div>
+              <p className="mt-3 text-muted-foreground">{inf.bio}</p>
             </section>
 
             <section>

@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { ArrowRight, Search, Sparkles, Star, TrendingUp, Users, Zap, CheckCircle2, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +18,18 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
   const featured = influencers.slice(0, 6);
+
+  const handleSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (searchQuery.trim()) {
+      navigate({ to: "/browse", search: { search: searchQuery.trim() } });
+    } else {
+      navigate({ to: "/browse" });
+    }
+  };
 
   return (
     <div className="overflow-hidden">
@@ -53,18 +65,18 @@ function Landing() {
               Discover vetted influencers across every niche. Launch campaigns in days, not weeks. Get measurable results.
             </p>
 
-            <div className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full border border-border bg-card/90 p-2 shadow-soft backdrop-blur">
+            <form onSubmit={handleSearch} className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full border border-border bg-card/90 p-2 shadow-soft backdrop-blur focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
               <Search className="ml-3 h-5 w-5 text-muted-foreground" />
               <input
                 placeholder="Try 'fashion creator in Paris'"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
-              <Link to="/browse">
-                <Button size="sm" className="rounded-full gradient-sunset border-0 text-white shadow-glow">
-                  Search <ArrowRight className="ml-1 h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
+              <Button type="submit" size="sm" className="rounded-full gradient-sunset border-0 text-white shadow-glow">
+                Search <ArrowRight className="ml-1 h-4 w-4" />
+              </Button>
+            </form>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link to="/browse">
@@ -180,13 +192,13 @@ function Landing() {
                   {inf.category}
                 </Badge>
               </div>
-              <div className="-mt-12 px-5 pb-5">
+              <div className="-mt-10 px-5 pb-5">
                 <img
                   src={inf.avatar}
                   alt={inf.name}
                   loading="lazy"
                   referrerPolicy="no-referrer"
-                  className="h-20 w-20 rounded-full border-4 border-card object-cover object-center shadow-soft bg-muted"
+                  className="relative z-10 h-20 w-20 rounded-full border-4 border-card object-cover shadow-elevated bg-muted"
                 />
                 <div className="mt-3 flex items-start justify-between">
                   <div>

@@ -12,6 +12,11 @@ import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/browse")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      search: (search.search as string) || "",
+    };
+  },
   head: () => ({
     meta: [
       { title: "Browse creators — Lumen" },
@@ -22,7 +27,8 @@ export const Route = createFileRoute("/browse")({
 });
 
 function Browse() {
-  const [query, setQuery] = useState("");
+  const searchParams = Route.useSearch();
+  const [query, setQuery] = useState(searchParams.search || "");
   const [activeCats, setActiveCats] = useState<string[]>([]);
   const [price, setPrice] = useState<number[]>([150000]);
   const [followers, setFollowers] = useState<number[]>([3000000]);
@@ -180,8 +186,8 @@ function Browse() {
                       </Badge>
                     )}
                   </div>
-                  <div className="-mt-10 flex-1 px-5 pb-5">
-                    <img src={inf.avatar} alt={inf.name} className="h-16 w-16 rounded-2xl border-4 border-card object-cover" />
+                  <div className="-mt-8 flex-1 px-5 pb-5">
+                    <img src={inf.avatar} alt={inf.name} className="relative z-10 h-16 w-16 rounded-full border-4 border-card object-cover shadow-sm bg-muted" />
                     <div className="mt-3 flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <h3 className="truncate font-display font-semibold">{inf.name}</h3>
