@@ -1,13 +1,3 @@
 {
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/assets/(.*)",
-      "destination": "/dist/client/assets/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api/server"
-    }
-  ]
+  "framework": "vite"
 }
