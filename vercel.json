@@ -1,8 +1,20 @@
 {
+  "version": 2,
+  "public": true,
+  "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/assets/(.*)",
+      "destination": "/dist/client/assets/$1"
+    },
+    {
       "source": "/(.*)",
-      "destination": "/index.html"
+      "destination": "/api/server"
     }
-  ]
+  ],
+  "functions": {
+    "api/server.js": {
+      "runtime": "nodejs20.x"
+    }
+  }
 }
