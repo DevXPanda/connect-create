@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
@@ -20,6 +21,11 @@ import { Route as DashboardCustomerRouteImport } from './routes/dashboard.custom
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/register': typeof RegisterRoute
   '/dashboard/customer': typeof DashboardCustomerRoute
   '/dashboard/influencer': typeof DashboardInfluencerRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/register': typeof RegisterRoute
   '/dashboard/customer': typeof DashboardCustomerRoute
   '/dashboard/influencer': typeof DashboardInfluencerRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/login': typeof LoginRoute
+  '/messages': typeof MessagesRoute
   '/register': typeof RegisterRoute
   '/dashboard/customer': typeof DashboardCustomerRoute
   '/dashboard/influencer': typeof DashboardInfluencerRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/browse'
     | '/login'
+    | '/messages'
     | '/register'
     | '/dashboard/customer'
     | '/dashboard/influencer'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/browse'
     | '/login'
+    | '/messages'
     | '/register'
     | '/dashboard/customer'
     | '/dashboard/influencer'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/browse'
     | '/login'
+    | '/messages'
     | '/register'
     | '/dashboard/customer'
     | '/dashboard/influencer'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
   LoginRoute: typeof LoginRoute
+  MessagesRoute: typeof MessagesRoute
   RegisterRoute: typeof RegisterRoute
   DashboardCustomerRoute: typeof DashboardCustomerRoute
   DashboardInfluencerRoute: typeof DashboardInfluencerRoute
@@ -128,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
   LoginRoute: LoginRoute,
+  MessagesRoute: MessagesRoute,
   RegisterRoute: RegisterRoute,
   DashboardCustomerRoute: DashboardCustomerRoute,
   DashboardInfluencerRoute: DashboardInfluencerRoute,

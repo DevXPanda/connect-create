@@ -1,10 +1,15 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Moon, Sun, Sparkles, Menu, X, LogOut } from "lucide-react";
+import { Moon, Sun, Sparkles, Menu, X, LogOut, Bell } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "./theme-provider";
 import { useAuth } from "./auth-provider";
 import { Button } from "./ui/button";
 import { toast } from "sonner";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { ChatDialog } from "./chat-dialog";
+import { Id } from "../../convex/_generated/dataModel";
+import { Badge } from "./ui/badge";
 
 const baseLinks = [
   { to: "/" as const, label: "Home" },
@@ -15,8 +20,13 @@ export function SiteNavbar() {
   const { theme, toggle } = useTheme();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, loading } = useAuth();
   const [open, setOpen] = useState(false);
+  const [showNotifs, setShowNotifs] = useState(false);
+  const [activeConv, setActiveConv] = useState<Id<"conversations"> | null>(null);
+
+  const conversations = useQuery(api.messages.getConversations, profile ? { profileId: profile._id, role: profile.role } : "skip");
+  const unreadCountTotal = conversations?.reduce((sum, c) => sum + c.unreadCount, 0) || 0;
 
   const links = [
     ...baseLinks,
@@ -36,12 +46,13 @@ export function SiteNavbar() {
   };
 
   const initial =
-    profile?.full_name?.trim()?.[0]?.toUpperCase() ||
+    profile?.fullName?.trim()?.[0]?.toUpperCase() ||
     user?.email?.[0]?.toUpperCase() ||
     "U";
 
   return (
-    <header className="sticky top-0 z-50 glass-strong">
+    <>
+      <header className="sticky top-0 z-50 glass-strong">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-sunset shadow-glow">
@@ -76,7 +87,71 @@ export function SiteNavbar() {
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
 
-          {user ? (
+          {user && (
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifs(!showNotifs)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-secondary relative"
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCountTotal > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-white shadow-sm">
+                    {unreadCountTotal}
+                  </span>
+                )}
+              </button>
+
+              {showNotifs && (
+                <div className="absolute right-0 mt-2 w-80 overflow-hidden rounded-3xl border border-border bg-card shadow-elevated z-50">
+                  <div className="border-b border-border p-4 flex items-center justify-between">
+                    <h3 className="font-display font-semibold">Notifications</h3>
+                    <Badge variant="secondary" className="rounded-full text-[10px]">{unreadCountTotal} New</Badge>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    {conversations?.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-muted-foreground">No notifications</div>
+                    ) : (
+                      conversations?.map((c) => (
+                        <div
+                          key={c._id}
+                          onClick={() => {
+                            setActiveConv(c._id);
+                            setShowNotifs(false);
+                          }}
+                          className="flex cursor-pointer items-center gap-3 border-b border-border/50 p-4 transition-colors hover:bg-secondary last:border-0"
+                        >
+                          <img
+                            src={c.otherProfile?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${c.otherProfile?.fullName}`}
+                            className="h-10 w-10 rounded-xl object-cover"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between">
+                              <span className="truncate font-display text-sm font-semibold">{c.otherProfile?.fullName}</span>
+                              <span className="text-[10px] text-muted-foreground">Just now</span>
+                            </div>
+                            <p className="truncate text-xs text-muted-foreground">{c.lastMessage?.text}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {conversations && conversations.length > 0 && (
+                    <Link
+                      to="/messages"
+                      onClick={() => setShowNotifs(false)}
+                      className="block border-t border-border p-3 text-center text-xs font-medium text-primary hover:bg-secondary transition-colors"
+                    >
+                      View all messages
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="h-9 w-24 rounded-full bg-secondary animate-pulse" />
+          ) : user ? (
             <div className="hidden items-center gap-2 sm:flex">
               <Link
                 to={profile?.role === "creator" ? "/dashboard/influencer" : "/dashboard/customer"}
@@ -86,7 +161,7 @@ export function SiteNavbar() {
                   {initial}
                 </span>
                 <span className="max-w-[120px] truncate text-sm font-medium">
-                  {profile?.full_name || user.email}
+                  {profile?.fullName || user.email}
                 </span>
               </Link>
               <Button
@@ -138,7 +213,7 @@ export function SiteNavbar() {
             {user ? (
               <div className="pt-2">
                 <div className="px-3 pb-2 text-xs text-muted-foreground">
-                  Signed in as {profile?.full_name || user.email}
+                  Signed in as {profile?.fullName || user.email}
                 </div>
                 <Button
                   variant="outline"
@@ -163,5 +238,15 @@ export function SiteNavbar() {
         </div>
       )}
     </header>
+    {activeConv && profile && (
+      <div className="fixed bottom-6 right-6 z-[60] w-[360px] max-w-[90vw] h-[500px] overflow-hidden rounded-3xl border border-border shadow-elevated">
+        <ChatDialog
+          conversationId={activeConv}
+          profileId={profile._id}
+          onClose={() => setActiveConv(null)}
+        />
+      </div>
+    )}
+</>
   );
 }

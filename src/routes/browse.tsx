@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { categories, formatFollowers, influencers } from "@/data/influencers";
+import { categories, formatFollowers, influencers, type Influencer } from "@/data/influencers";
 import { formatINR } from "@/lib/format";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const Route = createFileRoute("/browse")({
   head: () => ({
@@ -28,8 +30,32 @@ function Browse() {
   const [availableOnly, setAvailableOnly] = useState(false);
   const [open, setOpen] = useState(false);
 
+  const liveCreators = useQuery(api.profiles.list, { role: "creator", search: query }) || [];
+
+  const allInfluencers = useMemo(() => {
+    const live = liveCreators.map((p) => ({
+      id: p._id,
+      name: p.fullName,
+      handle: p.handle || `@${p.fullName.toLowerCase().replace(/\s/g, "")}`,
+      category: p.category || "General",
+      followers: 0, // Mock for live
+      startingPrice: p.startingPrice || 0,
+      location: p.location || "India",
+      rating: 5.0,
+      reviews: 0,
+      available: true,
+      avatar: p.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${p.fullName}`,
+      cover: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80",
+      bio: p.bio || "",
+    } as Influencer));
+
+    return [...live, ...influencers];
+  }, [liveCreators]);
+
   const filtered = useMemo(() => {
-    return influencers.filter((i) => {
+    return allInfluencers.filter((i) => {
+      // Basic query filter is already handled by Convex for live creators, 
+      // but we apply it here for mock data and extra safety.
       if (query && !`${i.name} ${i.handle} ${i.category}`.toLowerCase().includes(query.toLowerCase())) return false;
       if (activeCats.length && !activeCats.includes(i.category)) return false;
       if (i.startingPrice > price[0]) return false;
@@ -38,7 +64,7 @@ function Browse() {
       if (availableOnly && !i.available) return false;
       return true;
     });
-  }, [query, activeCats, price, followers, location, availableOnly]);
+  }, [allInfluencers, query, activeCats, price, followers, location, availableOnly]);
 
   const toggleCat = (c: string) =>
     setActiveCats((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]));

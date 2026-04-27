@@ -6,6 +6,8 @@ import { AuthProvider } from "@/components/auth-provider";
 import { SiteNavbar } from "@/components/site-navbar";
 import { SiteFooter } from "@/components/site-footer";
 import { Toaster } from "@/components/ui/sonner";
+import { ConvexProvider } from "convex/react";
+import { convex } from "@/lib/convex";
 
 function NotFoundComponent() {
   return (
@@ -66,16 +68,18 @@ function RootShell({ children }: { children: React.ReactNode }) {
 function RootComponent() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <div className="flex min-h-screen flex-col">
-          <SiteNavbar />
-          <main className="flex-1">
-            <Outlet />
-          </main>
-          <SiteFooter />
-        </div>
-        <Toaster />
-      </AuthProvider>
+      <ConvexProvider client={convex}>
+        <AuthProvider>
+          <div className="flex min-h-screen flex-col">
+            <SiteNavbar />
+            <main className="flex-1">
+              <Outlet />
+            </main>
+            <SiteFooter />
+          </div>
+          <Toaster />
+        </AuthProvider>
+      </ConvexProvider>
     </ThemeProvider>
   );
 }

@@ -1,14 +1,46 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, MapPin, Star, Instagram, Youtube, Twitter, Heart, Share2, MessageCircle, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { formatFollowers, influencers } from "@/data/influencers";
+import { formatFollowers, influencers, type Influencer } from "@/data/influencers";
 import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
+import { convex } from "@/lib/convex";
+import { api } from "../../convex/_generated/api";
+import { useAuth } from "@/components/auth-provider";
+import { useMutation } from "convex/react";
 
 export const Route = createFileRoute("/influencer/$id")({
-  loader: ({ params }) => {
-    const inf = influencers.find((i) => i.id === params.id);
+  loader: async ({ params }) => {
+    // 1. Try static data first
+    let inf = influencers.find((i) => i.id === params.id);
+    
+    // 2. Try Convex if not found
+    if (!inf) {
+      try {
+        const profile = await convex.query(api.profiles.getById, { id: params.id as any });
+        if (profile) {
+          inf = {
+            id: profile._id,
+            name: profile.fullName,
+            handle: profile.handle || `@${profile.fullName.toLowerCase().replace(/\s/g, "")}`,
+            category: profile.category || "General",
+            followers: 0,
+            startingPrice: profile.startingPrice || 0,
+            location: profile.location || "India",
+            rating: 5.0,
+            reviews: 0,
+            available: true,
+            avatar: profile.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.fullName}`,
+            cover: "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=900&q=80",
+            bio: profile.bio || "Creator on Lumen",
+          } as Influencer;
+        }
+      } catch (e) {
+        console.error("Convex profile fetch failed", e);
+      }
+    }
+
     if (!inf) throw notFound();
     return { inf };
   },
@@ -44,6 +76,34 @@ const tiers = [
 
 function Profile() {
   const { inf } = Route.useLoaderData();
+  const { profile: myProfile } = useAuth();
+  const startConversation = useMutation(api.messages.startConversation);
+  const navigate = useNavigate();
+
+  const handleHire = async () => {
+    if (!myProfile) {
+      toast.error("Please log in to hire creators");
+      return;
+    }
+    if (myProfile.role !== "brand") {
+      toast.error("Only brands can hire creators");
+      return;
+    }
+
+    try {
+      await startConversation({
+        creatorId: inf.id as any,
+        brandId: myProfile._id,
+        initialMessage: `Hi ${inf.name}, I'm interested in working with you!`,
+      });
+      toast.success("Inquiry sent! Redirecting to chat...");
+      navigate({ to: "/dashboard/customer" }); // For now redirect to dashboard
+    } catch (e) {
+      toast.error("Failed to send inquiry");
+      console.error(e);
+    }
+  };
+
   const portfolio = [inf.cover, ...influencers.slice(0, 5).map((i) => i.cover)];
 
   return (
@@ -94,7 +154,7 @@ function Profile() {
             <Button variant="outline" size="icon" className="rounded-full" onClick={() => toast("Link copied")}>
               <Share2 className="h-4 w-4" />
             </Button>
-            <Button className="rounded-full gradient-sunset border-0 text-white shadow-glow" onClick={() => toast.success("Message sent!")}>
+            <Button className="rounded-full gradient-sunset border-0 text-white shadow-glow" onClick={handleHire}>
               <MessageCircle className="mr-2 h-4 w-4" /> Hire {inf.name.split(" ")[0]}
             </Button>
           </div>

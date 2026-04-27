@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { Bookmark, Clock, Filter, Heart, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +22,7 @@ function CustomerDash() {
     "food bloggers Delhi",
   ];
 
-  const firstName = profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "";
+  const firstName = profile?.fullName?.split(" ")[0] || user?.email?.split("@")[0] || "";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

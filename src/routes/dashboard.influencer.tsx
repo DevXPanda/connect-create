@@ -8,7 +8,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { formatINR } from "@/lib/format";
 import { useAuth } from "@/components/auth-provider";
-import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard/influencer")({
@@ -16,16 +18,24 @@ export const Route = createFileRoute("/dashboard/influencer")({
   component: CreatorDash,
 });
 
-type Tier = { id?: string; name: string; price: number; sort_order: number };
-type Portfolio = { id: string; image_path: string; url: string };
-
-function publicUrl(path: string) {
-  return supabase.storage.from("portfolio").getPublicUrl(path).data.publicUrl;
-}
+type Tier = { id?: Id<"pricingTiers">; name: string; price: number; sortOrder: number };
+type PortfolioItem = { _id: Id<"portfolioImages">; imageStorageId: string; url: string | null };
 
 function CreatorDash() {
-  const { profile, user, refreshProfile } = useAuth();
+  const { profile, user } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Queries
+  const pricingTiers = useQuery(api.pricing.getByProfile, profile ? { profileId: profile._id } : "skip");
+  const portfolioImages = useQuery(api.portfolio.getByProfile, profile ? { profileId: profile._id } : "skip");
+
+  // Mutations
+  const updateProfile = useMutation(api.profiles.update);
+  const upsertPricing = useMutation(api.pricing.upsertMany);
+  const removeTierMutation = useMutation(api.pricing.remove);
+  const generateUploadUrl = useMutation(api.portfolio.generateUploadUrl);
+  const addPortfolioImage = useMutation(api.portfolio.addImage);
+  const removePortfolioImage = useMutation(api.portfolio.removeImage);
 
   const [fullName, setFullName] = useState("");
   const [handle, setHandle] = useState("");
@@ -34,128 +44,122 @@ function CreatorDash() {
   const [bio, setBio] = useState("");
   const [startingPrice, setStartingPrice] = useState<number>(0);
   const [tiers, setTiers] = useState<Tier[]>([]);
-  const [portfolio, setPortfolio] = useState<Portfolio[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
-    (async () => {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("full_name, handle, category, location, bio, starting_price")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (prof) {
-        setFullName(prof.full_name || "");
-        setHandle(prof.handle || "");
-        setCategory(prof.category || "");
-        setLocation(prof.location || "");
-        setBio(prof.bio || "");
-        setStartingPrice(Number(prof.starting_price ?? 0));
-      }
+    if (profile) {
+      setFullName(profile.fullName || "");
+      setHandle(profile.handle || "");
+      setCategory(profile.category || "");
+      setLocation(profile.location || "");
+      setBio(profile.bio || "");
+      setStartingPrice(Number(profile.startingPrice ?? 0));
+    }
+  }, [profile]);
 
-      const { data: t } = await supabase
-        .from("pricing_tiers")
-        .select("id, name, price, sort_order")
-        .eq("user_id", user.id)
-        .order("sort_order");
-      if (t && t.length) {
-        setTiers(t.map((x) => ({ id: x.id, name: x.name, price: Number(x.price), sort_order: x.sort_order })));
-      } else {
-        setTiers([
-          { name: "Story", price: 0, sort_order: 0 },
-          { name: "Post", price: 0, sort_order: 1 },
-          { name: "Reel", price: 0, sort_order: 2 },
-        ]);
-      }
-
-      const { data: imgs } = await supabase
-        .from("portfolio_images")
-        .select("id, image_path")
-        .eq("user_id", user.id)
-        .order("sort_order");
-      setPortfolio((imgs || []).map((i) => ({ id: i.id, image_path: i.image_path, url: publicUrl(i.image_path) })));
-    })();
-  }, [user]);
+  useEffect(() => {
+    if (pricingTiers && pricingTiers.length) {
+      setTiers(pricingTiers.map(t => ({ id: t._id, name: t.name, price: t.price, sortOrder: t.sortOrder })));
+    } else if (pricingTiers && pricingTiers.length === 0) {
+      setTiers([
+        { name: "Story", price: 0, sortOrder: 0 },
+        { name: "Post", price: 0, sortOrder: 1 },
+        { name: "Reel", price: 0, sortOrder: 2 },
+      ]);
+    }
+  }, [pricingTiers]);
 
   const saveProfile = async () => {
-    if (!user) return;
+    if (!profile) return;
     setSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: fullName,
-        handle: handle || null,
-        category: category || null,
-        location: location || null,
-        bio: bio || null,
-        starting_price: startingPrice || null,
-      })
-      .eq("id", user.id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Profile saved");
-    refreshProfile();
+    try {
+      await updateProfile({
+        id: profile._id,
+        fullName,
+        handle: handle || undefined,
+        category: category || undefined,
+        location: location || undefined,
+        bio: bio || undefined,
+        startingPrice,
+      });
+      toast.success("Profile saved");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const savePricing = async () => {
-    if (!user) return;
-    // Upsert all rows; delete is handled separately
-    const rows = tiers.map((t, idx) => ({
-      ...(t.id ? { id: t.id } : {}),
-      user_id: user.id,
-      name: t.name,
-      price: t.price,
-      sort_order: idx,
-    }));
-    const { error } = await supabase.from("pricing_tiers").upsert(rows).select();
-    if (error) return toast.error(error.message);
-    toast.success("Pricing updated");
-    // refresh ids
-    const { data } = await supabase
-      .from("pricing_tiers")
-      .select("id, name, price, sort_order")
-      .eq("user_id", user.id)
-      .order("sort_order");
-    if (data) setTiers(data.map((x) => ({ id: x.id, name: x.name, price: Number(x.price), sort_order: x.sort_order })));
+    if (!profile) return;
+    try {
+      await upsertPricing({
+        profileId: profile._id,
+        tiers: tiers.map((t, idx) => ({
+          id: t.id,
+          name: t.name,
+          price: t.price,
+          sortOrder: idx,
+        })),
+      });
+      toast.success("Pricing updated");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
   const removeTier = async (idx: number) => {
     const t = tiers[idx];
-    if (t.id) await supabase.from("pricing_tiers").delete().eq("id", t.id);
+    if (t.id) {
+      try {
+        await removeTierMutation({ id: t.id });
+      } catch (e: any) {
+        toast.error(e.message);
+        return;
+      }
+    }
     setTiers(tiers.filter((_, i) => i !== idx));
   };
 
   const onUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!user || !e.target.files?.length) return;
+    if (!profile || !e.target.files?.length) return;
     const file = e.target.files[0];
     setUploading(true);
-    const path = `${user.id}/${Date.now()}-${file.name}`;
-    const { error: upErr } = await supabase.storage.from("portfolio").upload(path, file);
-    if (upErr) {
+    try {
+      const postUrl = await generateUploadUrl();
+      const result = await fetch(postUrl, {
+        method: "POST",
+        headers: { "Content-Type": file.type },
+        body: file,
+      });
+      const { storageId } = await result.json();
+
+      await addPortfolioImage({
+        profileId: profile._id,
+        imageStorageId: storageId,
+        sortOrder: (portfolioImages?.length || 0),
+      });
+
+      toast.success("Image uploaded");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
       setUploading(false);
-      return toast.error(upErr.message);
+      if (fileRef.current) fileRef.current.value = "";
     }
-    const { data, error } = await supabase
-      .from("portfolio_images")
-      .insert({ user_id: user.id, image_path: path, sort_order: portfolio.length })
-      .select()
-      .single();
-    setUploading(false);
-    if (error || !data) return toast.error(error?.message || "Upload failed");
-    setPortfolio([...portfolio, { id: data.id, image_path: path, url: publicUrl(path) }]);
-    toast.success("Image uploaded");
-    if (fileRef.current) fileRef.current.value = "";
   };
 
-  const removeImage = async (img: Portfolio) => {
-    await supabase.storage.from("portfolio").remove([img.image_path]);
-    await supabase.from("portfolio_images").delete().eq("id", img.id);
-    setPortfolio(portfolio.filter((p) => p.id !== img.id));
+  const removeImage = async (id: Id<"portfolioImages">) => {
+    try {
+      await removePortfolioImage({ id });
+      toast.success("Image removed");
+    } catch (e: any) {
+      toast.error(e.message);
+    }
   };
 
-  const displayName = fullName?.split(" ")[0] || profile?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "there";
+  const displayName = fullName?.split(" ")[0] || profile?.fullName?.split(" ")[0] || user?.email?.split("@")[0] || "there";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -197,11 +201,11 @@ function CreatorDash() {
 
           <h3 className="mt-8 font-display text-base font-semibold">Portfolio</h3>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {portfolio.map((img) => (
-              <div key={img.id} className="group relative aspect-square overflow-hidden rounded-2xl border border-border">
-                <img src={img.url} alt="" className="h-full w-full object-cover" />
+            {portfolioImages?.map((img) => (
+              <div key={img._id} className="group relative aspect-square overflow-hidden rounded-2xl border border-border">
+                {img.url && <img src={img.url} alt="" className="h-full w-full object-cover" />}
                 <button
-                  onClick={() => removeImage(img)}
+                  onClick={() => removeImage(img._id)}
                   className="absolute right-2 top-2 rounded-full bg-background/90 p-1.5 opacity-0 shadow-soft transition-opacity group-hover:opacity-100"
                 >
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -229,7 +233,7 @@ function CreatorDash() {
               size="sm"
               variant="outline"
               className="rounded-full"
-              onClick={() => setTiers([...tiers, { name: "New tier", price: 0, sort_order: tiers.length }])}
+              onClick={() => setTiers([...tiers, { name: "New tier", price: 0, sortOrder: tiers.length }])}
             >
               <Plus className="mr-1 h-3 w-3" /> Add
             </Button>
