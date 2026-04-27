@@ -1,6 +1,4 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
-
-import appCss from "../styles.css?url";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/components/auth-provider";
 import { SiteNavbar } from "@/components/site-navbar";
@@ -39,37 +37,17 @@ export const Route = createRootRoute({
       { title: "Lumen — Where brands meet creators" },
       { name: "description", content: "Discover, hire, and collaborate with top influencers across fashion, fitness, tech, gaming, and more." },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
   }),
-  shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
 });
-
-function RootShell({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <HeadContent />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(t==='dark'||(!t&&d))document.documentElement.classList.add('dark');}catch(e){}})();`,
-          }}
-        />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
 
 function RootComponent() {
   return (
     <ThemeProvider>
       <ConvexProvider client={convex}>
         <AuthProvider>
+          <HeadContent />
           <div className="flex min-h-screen flex-col">
             <SiteNavbar />
             <main className="flex-1">
@@ -78,6 +56,7 @@ function RootComponent() {
             <SiteFooter />
           </div>
           <Toaster />
+          <Scripts />
         </AuthProvider>
       </ConvexProvider>
     </ThemeProvider>
