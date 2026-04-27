@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, Mail, Lock, User, Briefcase, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +16,16 @@ type Role = "creator" | "brand";
 
 function Register() {
   const navigate = useNavigate();
-  const { signInMock } = useAuth();
+  const { user, profile, signUpMock } = useAuth();
   const [role, setRole] = useState<Role>("creator");
+  
+  // If already signed in, redirect
+  useEffect(() => {
+    if (user && profile) {
+      navigate({ to: profile.role === "creator" ? "/dashboard/influencer" : "/dashboard/customer" });
+    }
+  }, [user, profile, navigate]);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,11 +42,11 @@ function Register() {
     
     // Using mock sign in for Convex migration
     try {
-      await signInMock(role, email, name);
+      await signUpMock(role, email, name);
       toast.success("Account created — welcome to Lumen!");
       navigate({ to: role === "creator" ? "/dashboard/influencer" : "/dashboard/customer" });
     } catch (error: any) {
-      toast.error(error.message || "Account creation failed");
+      toast.error(error.data || error.message || "Account creation failed");
     } finally {
       setSubmitting(false);
     }

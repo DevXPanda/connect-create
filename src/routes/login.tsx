@@ -1,11 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Sparkles, Mail, Lock } from "lucide-react";
+import { Sparkles, Mail, Lock, Camera, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useAuth } from "@/components/auth-provider";
+import { useAuth, UserRole } from "@/components/auth-provider";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Sign in — Lumen" }] }),
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const navigate = useNavigate();
   const { user, profile, signInMock } = useAuth();
+  const [role, setRole] = useState<UserRole>("creator");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
@@ -38,11 +39,12 @@ function Login() {
     
     // Using mock sign in for Convex migration
     try {
-      await signInMock("creator", email, "Satyam Pandey"); // Defaulting to creator for mock login
+      await signInMock(role, email);
       toast.success("Welcome back!");
-      navigate({ to: "/dashboard/influencer" });
+      navigate({ to: role === "creator" ? "/dashboard/influencer" : "/dashboard/customer" });
     } catch (error: any) {
-      toast.error(error.message || "Login failed");
+      // Use error.data for ConvexError message if available
+      toast.error(error.data || error.message || "Login failed");
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +66,31 @@ function Login() {
           <p className="mt-1 text-sm text-muted-foreground">Sign in to continue to Lumen</p>
         </div>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        <div className="mt-6 grid grid-cols-2 gap-3">
+          {([
+            { id: "creator", label: "Creator", icon: Camera },
+            { id: "brand", label: "Brand", icon: Briefcase },
+          ] as const).map((r) => {
+            const active = role === r.id;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setRole(r.id)}
+                className={`rounded-2xl border p-4 text-left transition-all ${
+                  active
+                    ? "border-primary bg-accent/40 shadow-soft"
+                    : "border-border hover:border-primary/40"
+                }`}
+              >
+                <r.icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                <div className="mt-2 text-sm font-semibold">{r.label}</div>
+              </button>
+            );
+          })}
+        </div>
+
+        <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
             <div className="relative mt-1.5">

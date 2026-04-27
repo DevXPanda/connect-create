@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Bookmark, Clock, Filter, Heart, Search, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,15 @@ export const Route = createFileRoute("/dashboard/customer")({
 });
 
 function CustomerDash() {
-  const { profile, user } = useAuth();
+  const navigate = useNavigate();
+  const { profile, user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate({ to: "/login" });
+    }
+  }, [user, loading, navigate]);
+
   const saved = influencers.slice(0, 4);
   const recent = [
     "fashion creators in Mumbai",

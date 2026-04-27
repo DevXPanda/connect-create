@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const list = query({
@@ -53,6 +53,7 @@ export const create = mutation({
     userId: v.string(),
     fullName: v.string(),
     role: v.union(v.literal("creator"), v.literal("brand")),
+    isLogin: v.boolean(),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -60,9 +61,19 @@ export const create = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .unique();
     
-    if (existing) {
-      await ctx.db.patch(existing._id, { role: args.role, fullName: args.fullName });
+    if (args.isLogin) {
+      if (!existing) {
+        throw new ConvexError("This email is not registered. Please create an account first.");
+      }
+      if (existing.role !== args.role) {
+        throw new ConvexError(`This account is registered as a ${existing.role}. Please log in as a ${existing.role}.`);
+      }
       return existing._id;
+    }
+
+    // Signup flow
+    if (existing) {
+      return existing._id; // Or throw if we want to prevent double registration
     }
 
     return await ctx.db.insert("profiles", {

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Eye, MousePointerClick, TrendingUp, Upload, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,8 @@ type Tier = { id?: Id<"pricingTiers">; name: string; price: number; sortOrder: n
 type PortfolioItem = { _id: Id<"portfolioImages">; imageStorageId: string; url: string | null };
 
 function CreatorDash() {
-  const { profile, user } = useAuth();
+  const navigate = useNavigate();
+  const { profile, user, loading } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Queries
@@ -46,6 +47,12 @@ function CreatorDash() {
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate({ to: "/login" });
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (profile) {

@@ -23,7 +23,8 @@ type AuthCtx = {
   profile: Profile | null;
   loading: boolean;
   signOut: () => Promise<void>;
-  signInMock: (role: UserRole) => Promise<void>;
+  signInMock: (role: UserRole, email?: string) => Promise<void>;
+  signUpMock: (role: UserRole, email: string, name: string) => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | undefined>(undefined);
@@ -45,19 +46,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const signInMock = async (role: UserRole, email: string = "hello@example.com", name: string = "Test User") => {
+  const signInMock = async (role: UserRole, email: string = "hello@example.com") => {
     // Generate a simple ID from email
     const id = `user_${btoa(email).slice(0, 8)}`;
     const mockUser = { id, email };
     
+    // Check if profile exists (using a new mutation or logic)
+    // For now, I'll update the Convex mutation to have a 'isLogin' flag
+    await createProfile({
+      userId: mockUser.id,
+      fullName: email.split("@")[0],
+      role: role,
+      isLogin: true, // New flag to prevent creation on login
+    });
+
     setUser(mockUser);
     localStorage.setItem("lumen_user", JSON.stringify(mockUser));
+  };
+
+  const signUpMock = async (role: UserRole, email: string, name: string) => {
+    const id = `user_${btoa(email).slice(0, 8)}`;
+    const mockUser = { id, email };
     
     await createProfile({
       userId: mockUser.id,
       fullName: name,
       role: role,
+      isLogin: false, // Allow creation on signup
     });
+
+    setUser(mockUser);
+    localStorage.setItem("lumen_user", JSON.stringify(mockUser));
   };
 
   const signOut = async () => {
@@ -66,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <Ctx.Provider value={{ user, profile: profile ?? null, loading, signOut, signInMock }}>
+    <Ctx.Provider value={{ user, profile: profile ?? null, loading, signOut, signInMock, signUpMock }}>
       {children}
     </Ctx.Provider>
   );
